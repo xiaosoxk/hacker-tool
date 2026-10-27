@@ -1,0 +1,14 @@
+# 沙箱镜像：POC 验证与样本分析的一次性执行环境（隔离网络内）
+FROM python:3.12-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl python3-pip && rm -rf /var/lib/apt/lists/* && \
+    pip install --no-cache-dir pefile yara-python && \
+    mkdir -p /opt/verify /work
+
+# 验证脚本：约定输出 CONFIRMED 才算验证成功（保守断言）
+RUN printf '#!/bin/sh\necho "[sandbox] verify placeholder: $1 $2"\necho "NOT_CONFIRMED"\n' \
+    > /opt/verify/run.sh && chmod +x /opt/verify/run.sh
+
+WORKDIR /work
+CMD ["sleep", "infinity"]

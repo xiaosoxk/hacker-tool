@@ -1,0 +1,21 @@
+# ROE 授权文件示例 —— 使用前必须由授权方书面确认后修改
+# 法务边界：仅对授权目标执行授权动作；《刑法》285/286 条红线不可触碰
+roe:
+  allowed_targets:
+    - "10.60.0.0/24"            # 授权实验网段
+    - "*.lab.example.com"       # 授权测试域名
+  allowed_actions:
+    - recon
+    - fingerprint
+    - intel
+    - analysis
+    - poc_verify
+    - report
+  denied_actions:               # 显式禁止（优先级最高）
+    - denial_of_service
+    - data_exfiltration
+    - social_engineering
+  max_requests_per_host: 500
+  time_window:
+    start: "2026-01-01"
+    end: "2026-12-31"

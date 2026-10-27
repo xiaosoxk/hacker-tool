@@ -1,0 +1,42 @@
+# Aegis Agent 隔离部署拓扑（对应文档第 13 章：多级权限隔离与沙箱）
+#
+#   aegis_net    : 编排层网络（agent 可访问模型 API）
+#   aegis_sandbox: internal 隔离网络（无外网出口），沙箱与目标靶机所在
+#
+services:
+  agent:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    networks: [aegis_net]
+    env_file: ../.env
+    volumes:
+      - ../data:/app/data          # 审计与记忆持久化
+      - ../roe.yaml:/app/roe.yaml:ro
+    depends_on: [sandbox]
+
+  sandbox:
+    build:
+      context: ./sandbox
+      dockerfile: Dockerfile.sandbox
+    image: aegis-sandbox:latest
+    networks: [aegis_sandbox]      # 仅隔离网络，永不暴露公网
+    read_only: true
+    tmpfs: ["/tmp:rw,size=64m"]
+    mem_limit: 512m
+    pids_limit: 128
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges]
+
+  # 可选：授权靶机（测试用），必须放在 sandbox 网络
+  target:
+    image: nginx:alpine
+    networks: [aegis_sandbox]
+    mem_limit: 128m
+
+networks:
+  aegis_net:
+    driver: bridge
+  aegis_sandbox:
+    driver: bridge
+    internal: true                 # 关键：无外网出口

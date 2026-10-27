@@ -1,0 +1,16 @@
+# 任务定义示例
+objective: 对授权实验网段执行安全评估并输出加固建议
+targets:
+  - 10.60.0.11
+mode: assess                  # assess | blue_sim
+entry_host: 10.60.0.11        # 攻击路径推演入口
+# pcap_path: data/sample.pcap # 可选：PCAP 深度分析
+network:                      # 可选：拓扑（横向路径推演用）
+  hosts:
+    10.60.0.11: {cvss: 7.5, value: normal}
+    10.60.0.20: {cvss: 9.8, value: core}
+    10.60.0.30: {cvss: 3.1, value: normal}
+  links:
+    - [10.60.0.11, 10.60.0.20]
+    - [10.60.0.11, 10.60.0.30]
+    - [10.60.0.20, 10.60.0.30]
