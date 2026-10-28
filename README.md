@@ -72,3 +72,9 @@ make replay                       # 回放审计日志
 | 人工审批 | interrupt_before=["poc_verify"]，高危动作挂起等批准 |
 | 沙箱 | 高危动作仅在 internal 网络 + 只读根 + 资源限额的一次性容器内执行 |
 | 幻觉抑制 | 无证据不报告 + 外部情报须独立验证 + 多模型评审去极值聚合 |
+
+## Kali 联动（详见 docs/KALI_INTEGRATION.md）
+
+`AEGIS_KALI=1` 后，Kali 工具生态（whatweb / wafw00f / nikto / gobuster / sslscan / searchsploit…）
+经白名单适配层接入 ToolBus，三种模式：**本机 Kali（local）/ 隔离 Kali 容器（docker，默认）/ SSH 联动你已有的 Kali 机（ssh）**。
+所有 Kali 调用照常过「授权门 → 熔断 → 审计」，攻击型工具（sqlmap 等）默认不在白名单、需 risk=high + 人工审批显式开放。

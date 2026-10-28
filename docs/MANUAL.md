@@ -49,6 +49,14 @@ run
 - **想换模型**：改 .env 的 AEGIS_PLANNER_MODEL / AEGIS_WORKER_MODEL / AEGIS_REVIEWERS。
 - **想清空记忆**：删除 data/memory/store.json（长期记忆是复利资产，慎删）。
 
+## 5.5 Kali 联动速查
+
+- 开关：`.env` 设 `AEGIS_KALI=1`；模式 `AEGIS_KALI_MODE=docker|ssh|local`（详见 docs/KALI_INTEGRATION.md）。
+- 生效后 planner 可路由 `kali_recon` 阶段（whatweb 指纹 + wafw00f WAF 识别），发现自动并入报告；
+  也可在计划中直接引用 `kali_nikto` / `kali_gobuster` / `kali_searchsploit` / `kali_run`。
+- Kali 不可达时自动降级（写 ev-kali-err 证据继续评估），不会阻塞出报告。
+- 扩展白名单工具按 KALI_INTEGRATION.md 第 4 节四步走；攻击型工具必须 risk=high 走审批。
+
 ## 6. 免责声明
 
 本工具输出为自动化评估参考，发布前必须由人类安全工程师复核；

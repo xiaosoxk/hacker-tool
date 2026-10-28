@@ -28,6 +28,21 @@ services:
     cap_drop: [ALL]
     security_opt: [no-new-privileges]
 
+  # Kali 工具容器（AEGIS_KALI=1 且 mode=docker 时由 agent docker exec 调用）
+  # 只挂 aegis_sandbox 隔离网络，不暴露任何端口到宿主
+  kali:
+    build:
+      context: ./kali
+      dockerfile: Dockerfile.kali
+    image: aegis-kali:latest
+    container_name: aegis-kali
+    networks: [aegis_sandbox]
+    user: kali
+    mem_limit: 1g
+    pids_limit: 256
+    security_opt: [no-new-privileges]
+    command: ["sleep", "infinity"]
+
   # 可选：授权靶机（测试用），必须放在 sandbox 网络
   target:
     image: nginx:alpine

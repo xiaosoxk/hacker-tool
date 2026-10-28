@@ -1,0 +1,18 @@
+# Kali 隔离容器：Aegis 的工具执行环境之一（docker 模式）
+# 只接入 aegis_sandbox 隔离网络；构建期安装常用检测类工具。
+FROM kalilinux/kali-rolling
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    nmap nikto whatweb wafw00f gobuster sslscan exploitdb \
+    dnsrecon seclists curl dnsutils whois ca-certificates openssh-client \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /work /usr/share/wordlists
+
+# 非特权用户
+RUN useradd -m -s /bin/bash kali || true
+USER kali
+WORKDIR /work
+
+# 容器常驻（由 agent 侧 docker exec 调用）；切勿暴露端口到宿主
+CMD ["sleep", "infinity"]

@@ -9,6 +9,7 @@ roe:
     - fingerprint
     - intel
     - analysis
+    - vuln_scan
     - poc_verify
     - report
   denied_actions:               # 显式禁止（优先级最高）

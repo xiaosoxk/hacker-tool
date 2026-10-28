@@ -58,6 +58,19 @@ make sandbox-up        # internal 隔离网络 + 只读 + 资源限额 + 无外�
 
 验证隔离性：`docker exec <sandbox容器> ping 8.8.8.8` 应当失败（internal 网络）。
 
+## 5.5 Kali 联动部署
+
+详见 `docs/KALI_INTEGRATION.md`。要点：
+
+```bash
+docker compose -f deploy/docker-compose.yml build kali    # 构建隔离 Kali 容器
+docker compose -f deploy/docker-compose.yml up -d kali
+# .env: AEGIS_KALI=1  AEGIS_KALI_MODE=docker
+```
+
+联动你已有的 Kali 主机用 `AEGIS_KALI_MODE=ssh`（专用受限密钥免密）。工具白名单、
+ROE 映射与扩展方法见 KALI_INTEGRATION.md 第 2、4 节；38 个测试含 Kali 解析器与降级路径。
+
 ## 6. 上线前检查清单
 
 - [ ] ROE 已由授权方书面确认，denied_actions 包含 DoS 与数据外带

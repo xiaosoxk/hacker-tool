@@ -61,6 +61,47 @@ def make_planner_node(chat: ChatFn):
     return planner
 
 
+def make_kali_recon_node(bus: ToolBus):
+    """Kali 联动侦察：whatweb 指纹 + wafw00f WAF 识别（工具经白名单与授权门）。"""
+
+    def kali_recon(state: dict) -> dict:
+        targets = state.get("task", {}).get("targets", [])
+        findings, evidence = [], []
+        for target in targets:
+            try:
+                res = bus.call("kali_whatweb", target=target)
+                ev_id = f"ev-kali-{target}"
+                for r in res.get("results", []):
+                    for tech in r.get("techs", [])[:8]:
+                        findings.append({
+                            "id": f"ktech-{r['target']}-{tech}", "type": "web_tech",
+                            "target": r["target"], "severity": "info",
+                            "summary": f"Kali whatweb 识别: {tech}",
+                            "product": tech, "evidence_id": ev_id,
+                        })
+                evidence.append({"id": ev_id, "tool": "kali_whatweb",
+                                 "summary": f"识别 {len(res.get('results', []))} 个目标"})
+            except Exception as exc:  # noqa: BLE001 —— Kali 不可达时降级继续主链路
+                evidence.append({"id": f"ev-kali-err-{target}", "tool": "kali_whatweb",
+                                 "summary": str(exc)[:160]})
+            try:
+                res = bus.call("kali_wafw00f", target=target)
+                if res.get("detected"):
+                    findings.append({
+                        "id": f"waf-{target}", "type": "waf_detected", "target": target,
+                        "severity": "info", "summary": f"检测到 WAF: {res.get('waf')}",
+                        "recommendation": "记录 WAF 类型；对抗测试须在授权与审批下进行",
+                        "evidence_id": f"ev-kali-waf-{target}",
+                    })
+                    evidence.append({"id": f"ev-kali-waf-{target}", "tool": "kali_wafw00f",
+                                     "summary": f"waf={res.get('waf')}"})
+            except Exception:  # noqa: BLE001
+                pass
+        return {"findings": findings, "evidence": evidence}
+
+    return kali_recon
+
+
 def make_recon_node(bus: ToolBus):
     def recon(state: dict) -> dict:
         targets = state.get("task", {}).get("targets", [])

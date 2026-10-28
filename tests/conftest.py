@@ -19,7 +19,8 @@ from secagent.tools.plugins import recon  # noqa: E402
 TEST_ROE = {
     "roe": {
         "allowed_targets": ["10.60.0.0/24", "*.lab.example.com"],
-        "allowed_actions": ["recon", "fingerprint", "intel", "analysis", "poc_verify", "report"],
+        "allowed_actions": ["recon", "fingerprint", "intel", "analysis", "vuln_scan",
+                            "poc_verify", "report"],
         "denied_actions": ["denial_of_service", "data_exfiltration"],
         "max_requests_per_host": 500,
     }

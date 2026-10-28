@@ -57,11 +57,28 @@ class MemoryConfig:
 
 
 @dataclass
+class KaliConfig:
+    """Kali 联动配置：local（运行环境即 Kali）/ docker（隔离容器）/ ssh（远程 Kali 机）。"""
+
+    enabled: bool = field(default_factory=lambda: _bool("AEGIS_KALI", False))
+    mode: str = field(default_factory=lambda: os.environ.get("AEGIS_KALI_MODE", "docker"))
+    container: str = field(default_factory=lambda: os.environ.get("AEGIS_KALI_CONTAINER", "aegis-kali"))
+    host: str = field(default_factory=lambda: os.environ.get("AEGIS_KALI_HOST", ""))
+    user: str = field(default_factory=lambda: os.environ.get("AEGIS_KALI_USER", "kali"))
+    key: str = field(default_factory=lambda: os.environ.get("AEGIS_KALI_KEY", ""))
+    port: int = int(os.environ.get("AEGIS_KALI_PORT", "22"))
+    wordlist: str = field(default_factory=lambda: os.environ.get(
+        "AEGIS_KALI_WORDLIST", "/usr/share/seclists/Discovery/Web-Content/common.txt"))
+    timeout: int = int(os.environ.get("AEGIS_KALI_TIMEOUT", "300"))
+
+
+@dataclass
 class Config:
     llm: LLMConfig = field(default_factory=LLMConfig)
     budget: BudgetConfig = field(default_factory=BudgetConfig)
     sandbox: SandboxConfig = field(default_factory=SandboxConfig)
     memory: MemoryConfig = field(default_factory=MemoryConfig)
+    kali: KaliConfig = field(default_factory=KaliConfig)
     # 审计日志路径（append-only JSONL）
     audit_path: str = field(default_factory=lambda: os.environ.get("AEGIS_AUDIT", "./data/audit.log"))
     # ROE 授权文件（YAML）：允许的目标与动作白名单

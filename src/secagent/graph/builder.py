@@ -45,6 +45,18 @@ def build_toolbus(roe: ROE, audit_path: str) -> ToolBus:
     bus.register(ToolMeta("pcap_analyze", "analysis"), pcap.analyze_pcap)
     bus.register(ToolMeta("malware_static", "analysis", risk="high"), malware_static.static_analyze)
     bus.register(ToolMeta("poc_verify", "poc_verify", risk="high"), _poc_verify_impl)
+
+    # ---- Kali 联动：AEGIS_KALI=1 时注册 Kali 工具（白名单 + 结构化解析）----
+    if CONFIG.kali.enabled:
+        from functools import partial
+        from secagent.tools import kali as k
+        ex = k.make_executor(CONFIG.kali)
+        bus.register(ToolMeta("kali_whatweb", "fingerprint"), partial(k.whatweb_tool, executor=ex))
+        bus.register(ToolMeta("kali_wafw00f", "fingerprint"), partial(k.wafw00f_tool, executor=ex))
+        bus.register(ToolMeta("kali_nikto", "vuln_scan", risk="medium"), partial(k.nikto_tool, executor=ex))
+        bus.register(ToolMeta("kali_gobuster", "recon"), partial(k.gobuster_tool, executor=ex))
+        bus.register(ToolMeta("kali_searchsploit", "intel"), partial(k.searchsploit_tool, executor=ex))
+        bus.register(ToolMeta("kali_run", "recon", risk="medium"), partial(k.generic_tool, executor=ex))
     return bus
 
 
@@ -96,6 +108,7 @@ def build_graph(chat: ChatFn | None = None, roe: ROE | None = None,
     g = StateGraph(AgentState)
     g.add_node("memory_recall", N.make_memory_node(store))
     g.add_node("planner", N.make_planner_node(chat))
+    g.add_node("kali_recon", N.make_kali_recon_node(bus))
     g.add_node("recon", N.make_recon_node(bus))
     g.add_node("fingerprint", N.make_fingerprint_node(bus, chat))
     g.add_node("vuln_scan", N.make_vulnscan_node(bus, chat))
@@ -109,7 +122,13 @@ def build_graph(chat: ChatFn | None = None, roe: ROE | None = None,
 
     g.add_edge(START, "memory_recall")
     g.add_edge("memory_recall", "planner")
-    g.add_edge("planner", "recon")
+    # planner 可按任务选择 Kali 联动侦察（AEGIS_KALI=1 时可用）
+    g.add_conditional_edges(
+        "planner",
+        lambda s: "kali_recon" if (CONFIG.kali.enabled and s.get("phase") == "kali_recon") else "recon",
+        {"kali_recon": "kali_recon", "recon": "recon"},
+    )
+    g.add_edge("kali_recon", "recon")
     g.add_edge("recon", "fingerprint")
     g.add_edge("fingerprint", "vuln_scan")
     g.add_conditional_edges("vuln_scan", _fanout,
